@@ -7,6 +7,51 @@
 //
 
 import UIKit
+import RealmSwift // Moved from didLaunch method
+
+class AircraftProfileData: Object { // Moved from didLaunch method
+    @objc dynamic var id: String = ""
+    @objc dynamic var _registration: String? = nil
+    @objc dynamic var _type: String? = nil
+    let _latitude = RealmOptional<Double>()
+    let _longitude = RealmOptional<Double>()
+    @objc dynamic var _beaconId: String? = nil
+    @objc dynamic var _autoArm: Bool = false
+    @objc dynamic var _isSelected: Bool = false
+    let _isInRange = RealmOptional<Bool>()
+    let _micAmplitudeDbThreshold = RealmOptional<Double>()
+    let _micLowPassCutoff = RealmOptional<Double>()
+    let _Vs = RealmOptional<Double>()
+    let _Vso = RealmOptional<Double>()
+    let _beaconMinor = RealmOptional<Int>()
+    @objc dynamic var _deviceId: String? = nil
+    
+    override static func primaryKey() -> String? {
+        return "id"
+    }
+}
+
+class AirportList: Object { // Moved from didLaunch method
+    let id = RealmOptional<Int>()
+    @objc dynamic var ident: String? = nil
+    @objc dynamic var type: String? = nil
+    @objc dynamic var name: String? = nil
+    let latitude_deg = RealmOptional<Double>()
+    let longitude_deg = RealmOptional<Double>()
+    let elevation_ft = RealmOptional<Int>()
+    @objc dynamic var continent: String? = nil
+    @objc dynamic var iso_country: String? = nil
+    @objc dynamic var iso_region: String? = nil
+    @objc dynamic var municipality: String? = nil
+    @objc dynamic var scheduled_service: String? = nil
+    @objc dynamic var gps_code: String? = nil
+    @objc dynamic var iata_code: String? = nil
+    @objc dynamic var local_code: String? = nil
+    @objc dynamic var home_link: String? = nil
+    @objc dynamic var wikipedia_link: String? = nil
+    @objc dynamic var keywords: String? = nil
+    let scheduled_service_bool = RealmOptional<Bool>()
+}
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -16,6 +61,103 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        
+//        import XCPlayground
+//        import PlaygroundSupport
+//        import RealmSwift
+        
+//        PlaygroundPage.current.needsIndefiniteExecution = true
+        
+        
+        // Define your models like regular Swift classes
+        let authURL = URL(string: "https://flashup-beta-1.us1.cloud.realm.io")!
+        let userRealmURL = URL(string: "realms://flashup-beta-1.us1.cloud.realm.io/~/realm")!
+        let airportsURL = URL(string: "realms://flashup-beta-1.us1.cloud.realm.io/airport-list")!
+        
+//        class AircraftProfileData: Object {
+//            @objc dynamic var id: String = ""
+//            @objc dynamic var _registration: String? = nil
+//            @objc dynamic var _type: String? = nil
+//            let _latitude = RealmOptional<Double>()
+//            let _longitude = RealmOptional<Double>()
+//            @objc dynamic var _beaconId: String? = nil
+//            @objc dynamic var _autoArm: Bool = false
+//            @objc dynamic var _isSelected: Bool = false
+//            let _isInRange = RealmOptional<Bool>()
+//            let _micAmplitudeDbThreshold = RealmOptional<Double>()
+//            let _micLowPassCutoff = RealmOptional<Double>()
+//            let _Vs = RealmOptional<Double>()
+//            let _Vso = RealmOptional<Double>()
+//            let _beaconMinor = RealmOptional<Int>()
+//            @objc dynamic var _deviceId: String? = nil
+//
+//            override static func primaryKey() -> String? {
+//                return "id"
+//            }
+//        }
+//
+//        class AirportList: Object {
+//            let id = RealmOptional<Int>()
+//            @objc dynamic var ident: String? = nil
+//            @objc dynamic var type: String? = nil
+//            @objc dynamic var name: String? = nil
+//            let latitude_deg = RealmOptional<Double>()
+//            let longitude_deg = RealmOptional<Double>()
+//            let elevation_ft = RealmOptional<Int>()
+//            @objc dynamic var continent: String? = nil
+//            @objc dynamic var iso_country: String? = nil
+//            @objc dynamic var iso_region: String? = nil
+//            @objc dynamic var municipality: String? = nil
+//            @objc dynamic var scheduled_service: String? = nil
+//            @objc dynamic var gps_code: String? = nil
+//            @objc dynamic var iata_code: String? = nil
+//            @objc dynamic var local_code: String? = nil
+//            @objc dynamic var home_link: String? = nil
+//            @objc dynamic var wikipedia_link: String? = nil
+//            @objc dynamic var keywords: String? = nil
+//            let scheduled_service_bool = RealmOptional<Bool>()
+//        }
+        
+        
+        let credentials = SyncCredentials.usernamePassword(username: "el", password: "el")
+        
+        SyncUser.logIn(with: credentials, server: authURL) {
+            (user, err) in
+            
+            if err != nil { print(err?.localizedDescription ?? "") }
+            
+            guard let user = user else {
+                print("User DNE")
+                return
+            }
+            
+            
+            let userRealmConfig = user.configuration(realmURL: userRealmURL, fullSynchronization: true)
+            
+            do {
+                let db = try Realm(configuration: userRealmConfig)
+                if let aircraft = db.objects(AircraftProfileData.self).first {
+                    print(aircraft._registration ?? "(empty)")
+                } else {
+                    print("no aircraft found")
+                }
+            } catch let err {
+                print("Error: \(err.localizedDescription)")
+            }
+            
+            let airportListConfig = user.configuration(realmURL: airportsURL, fullSynchronization: true)
+            do {
+                let db = try Realm(configuration: airportListConfig)
+                let airport = db.objects(AirportList.self).filter("ident = %@", "00AK")
+                print(airport)
+            } catch let err {
+                print("Error: \(err.localizedDescription)")
+            }
+            
+            print("Complete")
+        }
+
+        
         return true
     }
 
